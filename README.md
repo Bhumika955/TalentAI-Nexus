@@ -36,7 +36,7 @@ It acts as a centralized ecosystem that enhances job readiness and ensures safer
 * ⚡ **Framework:** Next.js 14
 * 🎨 **Styling:** Tailwind CSS
 * 🧠 **State Management:** Redux Toolkit
-* 🤖 **AI Integration:** Claude AI API
+* 🤖 **AI Integration:** Groq API (LLM-powered responses & mock interviews)
 * 🗂️ **Data Handling:** JSON-based company/job dataset
 * 💾 **Storage:** localStorage (for user history & sessions)
 * 🚀 **Deployment:** Vercel
