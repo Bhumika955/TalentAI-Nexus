@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🚀 TalentAI Nexus
 
-## Getting Started
+### 💡 Where Talent Meets Intelligence
 
-First, run the development server:
+---
+
+## 📌 Overview
+
+**TalentAI Nexus** is an AI-powered career platform designed to help students prepare for placements through intelligent tools like mock interviews, fake job detection, and personalized skill insights.
+
+It acts as a centralized ecosystem that enhances job readiness and ensures safer hiring experiences.
+
+---
+
+## 🎯 Key Features
+
+* 🤖 **AI Mock Interviews**
+  Practice real interview scenarios with AI-based chatbot interaction.
+
+* 🔍 **Fake Job Detection**
+  Identify and avoid fraudulent job postings using smart analysis.
+
+* 📊 **Skill Analysis Dashboard**
+  Get insights into strengths and areas of improvement.
+
+* 🧠 **Resume Analyzer** *(optional / future scope)*
+  Analyze resumes and get AI-based suggestions.
+
+* 🎯 **Placement Preparation System**
+  Structured approach to crack interviews and improve performance.
+
+---
+
+## 🛠️ Tech Stack
+
+* ⚡ **Framework:** Next.js 14
+* 🎨 **Styling:** Tailwind CSS
+* 🧠 **State Management:** Redux Toolkit
+* 🤖 **AI Integration:** Claude AI API
+* 🗂️ **Data Handling:** JSON-based company/job dataset
+* 💾 **Storage:** localStorage (for user history & sessions)
+* 🚀 **Deployment:** Vercel
+
+
+---
+
+## ⚙️ Installation & Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/Bhumika955/talentai-nexus.git
+
+# Go to project folder
+cd talentai-nexus
+
+# Install dependencies (if using React)
+npm install
+
+# Run the project
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 📸 Screenshots
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* verify fake jobs
+![alt text](image.png)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Future Enhancements
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* 🔗 Real-time job API integration
+* 🎙️ Voice-based mock interviews
+* 📈 Advanced analytics dashboard
+* 🤝 Recruiter-student matching system
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 👩‍💻 Author
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Bhumika Banke**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🌟 Contribution
+
+Feel free to fork this repository and contribute!
+
+---
+
+## 📬 Contact
+
+For any queries or suggestions, reach out via GitHub.
+
+---
