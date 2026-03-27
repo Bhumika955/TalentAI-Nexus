@@ -1,102 +1,138 @@
+"use client";
+import { useRouter } from "next/navigation";
+
+const stats = [
+  { value: "500+", label: "Questions" },
+  { value: "8+", label: "Companies" },
+  { value: "3", label: "AI Features" },
+  { value: "Free", label: "Always" },
+];
+
+const features = [
+  {
+    icon: "🔍",
+    title: "Fake Job Verifier",
+    desc: "Paste any job description — AI detects red flags instantly",
+    link: "/verify",
+    linkText: "Verify now →",
+    color: { bg: "bg-blue-50", text: "text-blue-600", border: "hover:border-blue-200" },
+  },
+  {
+    icon: "📚",
+    title: "Interview Preparation",
+    desc: "TCS, Infosys, Wipro — curated questions with tips & tricks",
+    link: "/prepare",
+    linkText: "Start preparing →",
+    color: { bg: "bg-green-50", text: "text-green-600", border: "hover:border-green-200" },
+  },
+  {
+    icon: "🤖",
+    title: "AI Mock Interview",
+    desc: "Real-time AI questions + instant feedback on your answers",
+    link: "/interview",
+    linkText: "Practice now →",
+    color: { bg: "bg-purple-50", text: "text-purple-600", border: "hover:border-purple-200" },
+  },
+];
+
 export default function Home() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen bg-gray-50">
 
       {/* Hero Section */}
-      <section className="bg-white border-b border-gray-100 px-6 py-16">
+      <section className="bg-white border-b border-gray-100 px-6 py-20">
         <div className="max-w-4xl mx-auto">
 
-          {/* Tag */}
+          {/* Animated Badge */}
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs px-3 py-1.5 rounded-full mb-6">
-            <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-            AI-powered career platform
+            <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+            AI-powered career platform for freshers
           </div>
 
           {/* Heading */}
-          <h1 className="text-4xl font-semibold text-gray-900 leading-tight mb-4">
-            Your smartest <br />
-            <span className="text-blue-600">career companion</span>
+          <h1 className="text-5xl font-semibold text-gray-900 leading-tight mb-5">
+            Land your first job <br />
+            <span className="text-blue-600">smarter & safer</span>
           </h1>
 
           {/* Subtext */}
-          <p className="text-gray-500 text-lg mb-8 max-w-xl">
-            Verify fake jobs, prepare company-wise, and practice AI mock
-            interviews — all in one place. Free forever.
+          <p className="text-gray-500 text-lg mb-10 max-w-xl leading-relaxed">
+            Verify fake jobs before applying, prepare company-wise, and practice
+            with an AI interviewer — all free, all in one place.
           </p>
 
-          {/* Buttons */}
+          {/* CTA Buttons — linked */}
           <div className="flex gap-4 flex-wrap">
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all">
-              Start Mock Interview
+            <button
+              onClick={() => router.push("/interview")}
+              className="bg-blue-600 text-white px-7 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
+            >
+              🤖 Start Mock Interview
             </button>
-            <button className="border border-gray-200 text-gray-700 px-6 py-3 rounded-lg text-sm hover:bg-gray-50 transition-all">
-              Verify a Job
+            <button
+              onClick={() => router.push("/verify")}
+              className="border border-gray-200 text-gray-700 px-7 py-3 rounded-lg text-sm hover:bg-gray-50 transition-all"
+            >
+              🔍 Verify a Job
+            </button>
+            <button
+              onClick={() => router.push("/prepare")}
+              className="border border-gray-200 text-gray-700 px-7 py-3 rounded-lg text-sm hover:bg-gray-50 transition-all"
+            >
+              📚 Interview Preparation
             </button>
           </div>
         </div>
       </section>
 
-      {/* Feature Cards */}
-      <section className="px-6 py-12 max-w-4xl mx-auto">
+      {/* How it Works */}
+      <section className="px-6 py-14 max-w-4xl mx-auto">
+        <h2 className="text-xl font-semibold text-gray-800 mb-8 text-center">How it works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          {/* Card 1 */}
-          <div className="bg-white border border-gray-100 rounded-xl p-6 hover:border-blue-200 transition-all cursor-pointer">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-blue-600 text-lg">🔍</span>
+          {["Paste a job or pick a company", "AI analyzes or asks you questions", "Get instant results or feedback"].map((step, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                {i + 1}
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed pt-1">{step}</p>
             </div>
-            <h3 className="text-gray-900 font-medium mb-2">Fake Job Verifier</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              Paste any job description — AI detects red flags instantly
-            </p>
-            <span className="text-blue-600 text-xs mt-4 block">Verify now →</span>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-white border border-gray-100 rounded-xl p-6 hover:border-blue-200 transition-all cursor-pointer">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-green-600 text-lg">📚</span>
-            </div>
-            <h3 className="text-gray-900 font-medium mb-2">Company Prep</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              TCS, Infosys, Wipro — curated questions with tips & tricks
-            </p>
-            <span className="text-green-600 text-xs mt-4 block">Start preparing →</span>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-white border border-gray-100 rounded-xl p-6 hover:border-blue-200 transition-all cursor-pointer">
-            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-purple-600 text-lg">🤖</span>
-            </div>
-            <h3 className="text-gray-900 font-medium mb-2">AI Mock Interview</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              Real-time AI questions + instant feedback on your answers
-            </p>
-            <span className="text-purple-600 text-xs mt-4 block">Practice now →</span>
-          </div>
-
+          ))}
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Feature Cards — clickable */}
       <section className="px-6 pb-12 max-w-4xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-100 rounded-xl p-5 text-center">
-            <div className="text-2xl font-semibold text-gray-900">500+</div>
-            <div className="text-gray-500 text-xs mt-1">Questions</div>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-5 text-center">
-            <div className="text-2xl font-semibold text-gray-900">8+</div>
-            <div className="text-gray-500 text-xs mt-1">Companies</div>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-5 text-center">
-            <div className="text-2xl font-semibold text-gray-900">3</div>
-            <div className="text-gray-500 text-xs mt-1">AI Features</div>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-5 text-center">
-            <div className="text-2xl font-semibold text-gray-900">Free</div>
-            <div className="text-gray-500 text-xs mt-1">Always</div>
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">Everything you need</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {features.map((f, i) => (
+            <div
+              key={i}
+              onClick={() => router.push(f.link)}
+              className={`bg-white border border-gray-100 rounded-xl p-6 cursor-pointer transition-all ${f.color.border} hover:shadow-sm`}
+            >
+              <div className={`w-10 h-10 ${f.color.bg} rounded-lg flex items-center justify-center mb-4 text-lg`}>
+                {f.icon}
+              </div>
+              <h3 className="text-gray-900 font-medium mb-2">{f.title}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-4">{f.desc}</p>
+              <span className={`${f.color.text} text-xs font-medium`}>{f.linkText}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="px-6 pb-16 max-w-4xl mx-auto">
+        <div className="bg-white border border-gray-100 rounded-2xl p-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {stats.map((s, i) => (
+              <div key={i}>
+                <div className="text-3xl font-semibold text-blue-600">{s.value}</div>
+                <div className="text-gray-400 text-sm mt-1">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
