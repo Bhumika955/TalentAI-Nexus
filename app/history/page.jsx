@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import LoginPrompt from "../components/LoginPrompt";
 
 const roleLabels = {
   frontend: "Frontend Developer",
@@ -9,16 +11,25 @@ const roleLabels = {
 };
 
 export default function History() {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [selected, setSelected] = useState(null);
 
+  // useEffect PEHLE — early return baad mein
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("interviewHistory") || "[]");
-    setSessions(data);
-  }, []);
+    if (!user) return;
+    const all = JSON.parse(localStorage.getItem("interviewHistory") || "[]");
+    const mine = all.filter((s) => s.userEmail === user.email);
+    setSessions(mine);
+  }, [user]);
+
+  // Ab early return — hooks ke baad
+  if (!user) return <LoginPrompt page="Interview History" />;
 
   const clearHistory = () => {
-    localStorage.removeItem("interviewHistory");
+    const all = JSON.parse(localStorage.getItem("interviewHistory") || "[]");
+    const others = all.filter((s) => s.userEmail !== user.email);
+    localStorage.setItem("interviewHistory", JSON.stringify(others));
     setSessions([]);
     setSelected(null);
   };
@@ -32,7 +43,9 @@ export default function History() {
             <span className="text-2xl">📋</span>
           </div>
           <h2 className="text-gray-700 font-medium mb-2">No interviews yet</h2>
-          <p className="text-gray-400 text-sm mb-6">Complete a mock interview to see your history here</p>
+          <p className="text-gray-400 text-sm mb-6">
+            Complete a mock interview to see your history here
+          </p>
           <a
             href="/interview"
             className="bg-purple-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all"
@@ -61,7 +74,9 @@ export default function History() {
           <div className="bg-white border border-gray-100 rounded-xl p-5 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-gray-900 font-medium">{roleLabels[session.role] || session.role}</h2>
+                <h2 className="text-gray-900 font-medium">
+                  {roleLabels[session.role] || session.role}
+                </h2>
                 <p className="text-gray-400 text-xs mt-1">{session.date}</p>
               </div>
               <div className="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full">
@@ -72,11 +87,16 @@ export default function History() {
 
           <div className="space-y-3">
             {session.messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed
-                  ${msg.role === "user"
-                    ? "bg-purple-600 text-white rounded-br-sm"
-                    : "bg-white border border-gray-100 text-gray-700 rounded-bl-sm"}`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed
+                    ${msg.role === "user"
+                      ? "bg-purple-600 text-white rounded-br-sm"
+                      : "bg-white border border-gray-100 text-gray-700 rounded-bl-sm"}`}
+                >
                   {msg.text}
                 </div>
               </div>
@@ -93,11 +113,14 @@ export default function History() {
     <main className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-1">Interview History</h1>
-            <p className="text-gray-500 text-sm">{sessions.length} session{sessions.length > 1 ? "s" : ""} completed</p>
+            <h1 className="text-3xl font-semibold text-gray-900 mb-1">
+              Interview History
+            </h1>
+            <p className="text-gray-500 text-sm">
+              {sessions.length} session{sessions.length > 1 ? "s" : ""} completed
+            </p>
           </div>
           <button
             onClick={clearHistory}
@@ -107,7 +130,6 @@ export default function History() {
           </button>
         </div>
 
-        {/* Sessions */}
         <div className="space-y-3">
           {sessions.map((session, i) => (
             <div
@@ -127,11 +149,15 @@ export default function History() {
                     <div className="text-sm font-medium text-gray-800">
                       {roleLabels[session.role] || session.role}
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5">{session.date}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {session.date}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400">{session.messages.length} msgs</span>
+                  <span className="text-xs text-gray-400">
+                    {session.messages.length} msgs
+                  </span>
                   <span className="text-purple-500 text-sm">→</span>
                 </div>
               </div>

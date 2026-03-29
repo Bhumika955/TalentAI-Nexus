@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { companies } from "../../data/companies";
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
+import LoginPrompt from "../components/LoginPrompt";
 
 const colorMap = {
   blue: { bg: "bg-blue-50", text: "text-blue-700", badge: "bg-blue-100 text-blue-800" },
@@ -12,8 +14,13 @@ const colorMap = {
 };
 
 export default function Prepare() {
+  const { user } = useAuth();
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState("hr");
+ 
+  if (!user) {
+  return <LoginPrompt page="Interview Preparation" />;
+}
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-12">

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import LoginPrompt from "../components/LoginPrompt";
 
 const roles = [
   { id: "frontend", label: "Frontend Developer", icon: "🖥️" },
@@ -15,10 +17,15 @@ export default function MockInterview() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
+  const { user } = useAuth();
 
+  // useEffect PEHLE — early return baad mein
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Ab early return — hooks ke baad
+  if (!user) return <LoginPrompt page="Mock Interview" />;
 
   const startInterview = async () => {
     setStarted(true);
@@ -47,14 +54,16 @@ export default function MockInterview() {
       body: JSON.stringify({ role: selectedRole, messages: updated, action: "continue" }),
     });
     const data = await res.json();
-    setMessages([...updated, { role: "ai", text: data.reply }]);
+    const finalMessages = [...updated, { role: "ai", text: data.reply }];
+    setMessages(finalMessages);
 
-    // Save to localStorage
+    // User email ke saath save karo
     const session = {
       id: Date.now(),
       role: selectedRole,
       date: new Date().toLocaleDateString(),
-      messages: [...updated, { role: "ai", text: data.reply }],
+      messages: finalMessages,
+      userEmail: user.email,
     };
     const prev = JSON.parse(localStorage.getItem("interviewHistory") || "[]");
     localStorage.setItem("interviewHistory", JSON.stringify([session, ...prev].slice(0, 10)));
