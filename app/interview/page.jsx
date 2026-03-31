@@ -5,9 +5,15 @@ import LoginPrompt from "../components/LoginPrompt";
 
 const roles = [
   { id: "frontend", label: "Frontend Developer", icon: "🖥️" },
+  { id: "react", label: "React Developer", icon: "⚛️" },
+  { id: "backend", label: "Backend Developer", icon: "🔧" },
+  { id: "nodejs", label: "Node.js Developer", icon: "🟢" },
   { id: "fullstack", label: "Full Stack Developer", icon: "⚡" },
-  { id: "hr", label: "HR Round", icon: "🤝" },
-  { id: "dsa", label: "DSA & Logic", icon: "🧠" },
+  { id: "dsa", label: "DSA & Problem Solving", icon: "🧠" },
+  { id: "systemdesign", label: "System Design", icon: "🏗️" },
+  { id: "dataanalyst", label: "Data Analyst", icon: "📊" },
+  { id: "devops", label: "DevOps Engineer", icon: "🚀" },
+  { id: "hr", label: "HR Role", icon: "🤝" },
 ];
 
 export default function MockInterview() {
@@ -16,6 +22,7 @@ export default function MockInterview() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [customRole, setCustomRole] = useState("");
   const bottomRef = useRef(null);
   const { user } = useAuth();
 
@@ -27,13 +34,15 @@ export default function MockInterview() {
   // Ab early return — hooks ke baad
   if (!user) return <LoginPrompt page="Mock Interview" />;
 
+  const activeRole = customRole.trim() || roles.find(r => r.id === selectedRole)?.label || selectedRole;
+
   const startInterview = async () => {
     setStarted(true);
     setLoading(true);
     const res = await fetch("/api/interview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: selectedRole, messages: [], action: "start" }),
+      body: JSON.stringify({ role: activeRole, messages: [], action: "start" }),
     });
     const data = await res.json();
     setMessages([{ role: "ai", text: data.reply }]);
@@ -51,7 +60,7 @@ export default function MockInterview() {
     const res = await fetch("/api/interview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: selectedRole, messages: updated, action: "continue" }),
+      body: JSON.stringify({ role: activeRole, messages: updated, action: "continue" }),
     });
     const data = await res.json();
     const finalMessages = [...updated, { role: "ai", text: data.reply }];
@@ -60,7 +69,7 @@ export default function MockInterview() {
     // User email ke saath save karo
     const session = {
       id: Date.now(),
-      role: selectedRole,
+      role: activeRole,
       date: new Date().toLocaleDateString(),
       messages: finalMessages,
       userEmail: user.email,
@@ -70,8 +79,7 @@ export default function MockInterview() {
 
     setLoading(false);
   };
-
-  // Role Selection Screen
+// Role Selection Screen
   if (!started) {
     return (
       <main className="min-h-screen bg-gray-50 px-6 py-12">
@@ -82,16 +90,49 @@ export default function MockInterview() {
               AI Interviewer
             </div>
             <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mock Interview</h1>
-            <p className="text-gray-500">Choose your role — AI will ask real questions and give feedback</p>
+            <p className="text-gray-500">Choose a role or type your own — AI will ask real questions and give feedback</p>
+          </div>
+          {/* Custom Role Input */}
+          <div className="bg-white border border-gray-100 rounded-xl p-4 mb-5">
+            <div className="text-xs font-medium text-gray-500 mb-2">✏️ Type any custom role</div>
+            <input
+              type="text"
+              placeholder="e.g. Machine Learning Engineer, iOS Developer, Blockchain Developer..."
+              value={customRole}
+              onChange={(e) => {
+                setCustomRole(e.target.value);
+                if (e.target.value) setSelectedRole(null);
+              }}
+              className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-all
+                ${customRole
+                  ? "border-purple-400 bg-purple-50"
+                  : "border-gray-200 focus:border-purple-400"}`}
+            />
+            {customRole && (
+              <div className="text-xs text-purple-600 mt-2">
+                ✓ Custom role: <span className="font-medium">{customRole}</span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          {/* Or Divider */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-gray-100"></div>
+            <span className="text-xs text-gray-400">or choose from below</span>
+            <div className="flex-1 h-px bg-gray-100"></div>
+          </div>
+
+          {/* Predefined Roles */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
             {roles.map((r) => (
               <div
                 key={r.id}
-                onClick={() => setSelectedRole(r.id)}
+                onClick={() => {
+                  setSelectedRole(r.id);
+                  setCustomRole("");
+                }}
                 className={`bg-white border rounded-xl p-4 cursor-pointer transition-all
-                  ${selectedRole === r.id
+                  ${selectedRole === r.id && !customRole
                     ? "border-purple-400 bg-purple-50"
                     : "border-gray-100 hover:border-gray-300"}`}
               >
@@ -101,9 +142,10 @@ export default function MockInterview() {
             ))}
           </div>
 
+
           <button
             onClick={startInterview}
-            disabled={!selectedRole}
+            disabled={!selectedRole && !customRole.trim()}
             className="w-full bg-purple-600 text-white py-3 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Start Interview →
@@ -123,7 +165,7 @@ export default function MockInterview() {
           <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs">AI</div>
           <div>
             <div className="text-sm font-medium text-gray-800">AI Interviewer</div>
-            <div className="text-xs text-gray-400">{roles.find(r => r.id === selectedRole)?.label}</div>
+            <div className="text-xs text-gray-400">{activeRole}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full">
