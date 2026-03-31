@@ -353,7 +353,7 @@ export const featuredCompanies = [
     difficulty: "Medium",
   },
   {
-    id: "deloitte-senior",
+    id: "deloitte-senior1",
     name: "Deloitte",
     fullName: "Deloitte India",
     category: "Global MNC",
@@ -386,7 +386,7 @@ export const featuredCompanies = [
     difficulty: "Medium",
   },
    {
-    id: "deloitte-senior",
+    id: "deloitte-senior2",
     name: "Deloitte",
     fullName: "Deloitte India",
     category: "Global MNC",
@@ -418,7 +418,7 @@ export const featuredCompanies = [
     difficulty: "Hard",
   },
    {
-    id: "razorpay-sde",
+    id: "razorpay-sde1",
     name: "Razorpay",
     fullName: "Razorpay Software Pvt Ltd",
     category: "Product",
