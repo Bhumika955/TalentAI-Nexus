@@ -27,6 +27,8 @@ export default function MockInterview() {
   const [showPopup, setShowPopup] = useState(false);
   const [finalResult, setFinalResult] = useState(null);
   const [ended, setEnded] = useState(false);
+  const [continued, setContinued] = useState(false);
+  const continuedRef = useRef(false);
   const bottomRef = useRef(null);
   const { user } = useAuth();
 const router = useRouter();
@@ -199,7 +201,11 @@ const parseFinalResult = (text) => {
       const finalMessages = [...updated, { role: "ai", text: data.reply }];
       setMessages(finalMessages);
 
-      if (data.reply && data.reply.includes("INTERVIEW_COMPLETE")) {
+      if (
+        !continuedRef.current &&
+        data.reply && 
+        (data.reply.includes("INTERVIEW_COMPLETE") || data.reply.includes("Overall Score:"))
+      ) {
         setFinalResult(data.reply);
         setShowPopup(true);
       }
@@ -443,19 +449,30 @@ const parseFinalResult = (text) => {
               <button
                 onClick={async () => {
                   setShowPopup(false);
+                  setContinued(true);
+                  continuedRef.current = true;
                   setLoading(true);
+
+                  // Resume message add karo
+                  const resumeMsg = {
+                    role: "ai",
+                    text: "▶️ Interview resumed! Let's continue with more questions."
+                  };
+                  const resumedMessages = [...messages, resumeMsg];
+                  setMessages(resumedMessages);
+
                   try {
                     const res = await fetch("/api/interview", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         role: activeRole,
-                        messages: messages,
-                        action: "continue",
+                        messages: resumedMessages,
+                        action: "resume",
                       }),
                     });
                     const data = await res.json();
-                    const finalMessages = [...messages, { role: "ai", text: data.reply }];
+                    const finalMessages = [...resumedMessages, { role: "ai", text: data.reply }];
                     setMessages(finalMessages);
                   } catch (err) {
                     console.error(err);

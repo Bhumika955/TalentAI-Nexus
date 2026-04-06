@@ -38,6 +38,13 @@ STRICTLY follow these formats. No extra lines.`;
       });
     }
 
+    if (action === "resume") {
+      history.push({
+        role: "user",
+        content: `The candidate wants to continue practicing. Ask 5 more fresh questions for ${role} role. Start with question 1.`,
+      });
+    }
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
