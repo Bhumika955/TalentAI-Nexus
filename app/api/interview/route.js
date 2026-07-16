@@ -12,9 +12,12 @@ IMPORTANT RULES:
 
 ✅ Correct: [what was right]
 ❌ Missing: [what was wrong]
-💡 Suggestion: [how to improve]
+💡 Suggestion: [how to improve in 1 short line]. Ideal Answer: [a concise, correct, exam-ready answer to the question that was just asked, in 2-3 lines max]
 
 Next Question: [question here]
+
+- The Suggestion line MUST always include "Ideal Answer:" inside it as shown above, on the same line, so the candidate can immediately see the correct answer.
+- Keep the Ideal Answer factually accurate, concise, and directly usable for revision — no fluff.
 
 - After the 6th answer, give ONLY this (no Next Question):
 
