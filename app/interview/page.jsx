@@ -17,6 +17,47 @@ const roles = [
   { id: "hr", label: "HR Role", icon: "🤝" },
 ];
 
+// Common connector/filler words — never highlighted, never counted toward score
+const STOPWORDS = new Set([
+  "a", "an", "the", "is", "are", "was", "were", "be", "been", "being", "has",
+  "have", "had", "with", "and", "or", "but", "that", "this", "these", "those",
+  "of", "in", "on", "at", "to", "for", "from", "by", "as", "it", "its", "if",
+  "then", "so", "not", "no", "do", "does", "did", "which", "who", "whom",
+  "whose", "when", "where", "while", "than", "also", "into", "you", "your",
+  "i", "we", "our", "they", "their", "them", "he", "she", "doesnt", "doesn't",
+  "value", "changes", "change",
+]);
+
+const normalizeWord = (w) => w.toLowerCase().replace(/[^\w]/g, "");
+
+// Small Levenshtein distance — lets typos like "gloabl" still match "global"
+function editDistance(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array(b.length + 1).fill(0)
+  );
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function fuzzyIncludes(word, userWordsArr) {
+  const maxDist = word.length <= 4 ? 1 : 2;
+  return userWordsArr.some(
+    (uw) =>
+      uw === word ||
+      (Math.abs(uw.length - word.length) <= maxDist &&
+        editDistance(word, uw) <= maxDist)
+  );
+}
+
 export default function MockInterview() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [started, setStarted] = useState(false);
@@ -31,7 +72,7 @@ export default function MockInterview() {
   const continuedRef = useRef(false);
   const bottomRef = useRef(null);
   const { user } = useAuth();
-const router = useRouter();
+  const router = useRouter();
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -40,8 +81,51 @@ const router = useRouter();
 
   const activeRole = customRole.trim() || roles.find(r => r.id === selectedRole)?.label || selectedRole;
 
+  // ✅ Word-level diff: highlights concept words the user covered (green) vs
+  // missed (amber). Filler/connector words are skipped entirely and never
+  // counted. Typos are still matched via edit-distance ("gloabl" ~ "global").
+  // Returns { nodes, score } so callers can render a coverage % badge too.
+  const renderIdealAnswerDiff = (idealText, userAnswerText) => {
+    if (!userAnswerText) return { nodes: idealText, score: null };
+
+    const userWordsArr = userAnswerText
+      .split(/\s+/)
+      .map(normalizeWord)
+      .filter(Boolean);
+
+    let total = 0;
+    let covered = 0;
+
+    const nodes = idealText.split(/(\s+)/).map((token, idx) => {
+      if (/^\s+$/.test(token) || !token) return token;
+
+      const norm = normalizeWord(token);
+      if (!norm || norm.length <= 2 || STOPWORDS.has(norm)) return token;
+
+      total += 1;
+      const isCovered = fuzzyIncludes(norm, userWordsArr);
+      if (isCovered) covered += 1;
+
+      return (
+        <span
+          key={idx}
+          className={
+            isCovered
+              ? "text-green-700 font-semibold"
+              : "bg-amber-200 text-amber-900 rounded px-0.5"
+          }
+        >
+          {token}
+        </span>
+      );
+    });
+
+    const score = total > 0 ? Math.round((covered / total) * 100) : null;
+    return { nodes, score };
+  };
+
   // ✅ formatAIMessage — component level pe, sendAnswer ke bahar
-  const formatAIMessage = (text) => {
+  const formatAIMessage = (text, userAnswerText) => {
     if (!text) return null;
 
     if (text.includes("INTERVIEW_COMPLETE")) {
@@ -103,17 +187,62 @@ const router = useRouter();
             );
           }
           if (line.startsWith("💡")) {
+            const label = line.slice(2).split(":")[0].trim();
+            const rest = line.slice(2).split(":").slice(1).join(":").trim();
+
+            // Pull "Ideal Answer: ..." out of the suggestion line, if present
+            const idealMatch = rest.match(/Ideal Answer:\s*(.*)/i);
+            const tipPart = idealMatch ? rest.slice(0, idealMatch.index).trim() : rest;
+            const idealPart = idealMatch ? idealMatch[1].trim() : null;
+
+            // Compute diff once per render for this block
+            const diffResult = idealPart
+              ? renderIdealAnswerDiff(idealPart, userAnswerText)
+              : null;
+
             return (
               <div key={i} className="px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400">
                 <div className="flex items-start gap-2">
                   <span className="text-lg flex-shrink-0">💡</span>
-                  <div>
+                  <div className="flex-1">
                     <span className="text-xs font-bold text-yellow-700">
-                      {line.slice(2).split(":")[0]}:{" "}
+                      {label}:{" "}
                     </span>
                     <span className="text-xs text-gray-700 leading-relaxed">
-                      {line.slice(2).split(":").slice(1).join(":").trim()}
+                      {tipPart}
                     </span>
+
+                    {idealPart && (
+                      <div className="mt-2 pt-2 border-t border-yellow-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs font-bold text-yellow-800">
+                            ✓ Ideal Answer
+                          </div>
+                          {diffResult.score !== null && (
+                            <span
+                              className={`${
+                                diffResult.score >= 80
+                                  ? "bg-emerald-500"
+                                  : diffResult.score >= 50
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                              } text-white text-[10px] font-semibold rounded-full px-2 py-0.5`}
+                            >
+                              {diffResult.score}% covered
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                          {diffResult.nodes}
+                        </p>
+                        {userAnswerText && (
+                          <div className="text-[10px] text-gray-400 mt-1.5 flex gap-3">
+                            <span><span className="text-green-700 font-semibold">green</span> = you covered this</span>
+                            <span><span className="bg-amber-200 px-1 rounded text-amber-900">yellow</span> = you missed this</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -318,19 +447,27 @@ const parseFinalResult = (text) => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-2xl mx-auto w-full">
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            {msg.role === "user" ? (
-              <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-purple-600 text-white">
-                {msg.text}
-              </div>
-            ) : (
-              <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white border border-gray-100 overflow-hidden">
-                {formatAIMessage(msg.text)}
-              </div>
-            )}
-          </div>
-        ))}
+        {messages.map((msg, i) => {
+          // For an AI feedback message, find the user's answer that came right before it
+          const prevUserAnswer =
+            msg.role === "ai" && i > 0 && messages[i - 1].role === "user"
+              ? messages[i - 1].text
+              : null;
+
+          return (
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              {msg.role === "user" ? (
+                <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-purple-600 text-white">
+                  {msg.text}
+                </div>
+              ) : (
+                <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white border border-gray-100 overflow-hidden">
+                  {formatAIMessage(msg.text, prevUserAnswer)}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {loading && (
           <div className="flex justify-start">
