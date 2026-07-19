@@ -58,6 +58,10 @@ function fuzzyIncludes(word, userWordsArr) {
   );
 }
 
+// Matches the "Note: ... final question ..." line so we can pull it out
+// of the inline chat flow and show it as a popup instead.
+const FINAL_QUESTION_REGEX = /final question/i;
+
 export default function MockInterview() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [started, setStarted] = useState(false);
@@ -69,6 +73,7 @@ export default function MockInterview() {
   const [finalResult, setFinalResult] = useState(null);
   const [ended, setEnded] = useState(false);
   const [continued, setContinued] = useState(false);
+  const [showFinalQuestionPopup, setShowFinalQuestionPopup] = useState(false);
   const continuedRef = useRef(false);
   const bottomRef = useRef(null);
   const { user } = useAuth();
@@ -279,6 +284,11 @@ export default function MockInterview() {
               </div>
             );
           }
+          // "Note: ... final question ..." — pulled out into a centered popup
+          // instead of being shown as a plain inline line (see showFinalQuestionPopup).
+          if (FINAL_QUESTION_REGEX.test(line)) {
+            return null;
+          }
           return (
             <div key={i} className="px-4 py-2 text-sm text-gray-700 leading-relaxed">
               {line}
@@ -350,12 +360,17 @@ const parseFinalResult = (text) => {
       setMessages(finalMessages);
 
       if (
-        !continuedRef.current &&
         data.reply && 
         (data.reply.includes("INTERVIEW_COMPLETE") || data.reply.includes("Overall Score:"))
       ) {
         setFinalResult(data.reply);
         setShowPopup(true);
+      }
+
+      // Final question of this round — show a centered popup instead of
+      // burying it as a plain inline line.
+      if (data.reply && FINAL_QUESTION_REGEX.test(data.reply)) {
+        setShowFinalQuestionPopup(true);
       }
 
       const session = {
@@ -535,6 +550,29 @@ const parseFinalResult = (text) => {
         </div>
       )}
 
+      {/* Final Question (of this round) Popup — centered, dismissible */}
+      {showFinalQuestionPopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 px-4 pointer-events-none backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-sm overflow-hidden text-center pointer-events-auto">
+            <div className="bg-purple-600 px-6 py-6 text-white">
+              <div className="text-4xl mb-2">🏁</div>
+              <h2 className="text-lg font-semibold">Final Question!</h2>
+              <p className="text-purple-200 text-sm mt-1">
+                This is the last question of this round — give it your best shot.
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <button
+                onClick={() => setShowFinalQuestionPopup(false)}
+                className="w-full bg-purple-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all"
+              >
+                Got it, let's finish strong! 💪
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Final Result Popup */}
       {showPopup && finalResult && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
@@ -630,6 +668,11 @@ const parseFinalResult = (text) => {
                     const data = await res.json();
                     const finalMessages = [...resumedMessages, { role: "ai", text: data.reply }];
                     setMessages(finalMessages);
+
+                    // New round can also end on a final question — show popup again if so.
+                    if (data.reply && FINAL_QUESTION_REGEX.test(data.reply)) {
+                      setShowFinalQuestionPopup(true);
+                    }
                   } catch (err) {
                     console.error(err);
                   } finally {
