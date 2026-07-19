@@ -124,6 +124,19 @@ export default function MockInterview() {
     return { nodes, score };
   };
 
+  // Pulls "Ideal Answer: ..." out of a 💡 line and returns its diff/score.
+  // Computed once per message so the Missing box can also reference the score.
+  const extractIdealAnswer = (line, userAnswerText) => {
+    const rest = line.slice(2).split(":").slice(1).join(":").trim();
+    const idealMatch = rest.match(/Ideal Answer:\s*(.*)/i);
+    const tipPart = idealMatch ? rest.slice(0, idealMatch.index).trim() : rest;
+    const idealPart = idealMatch ? idealMatch[1].trim() : null;
+    const diffResult = idealPart
+      ? renderIdealAnswerDiff(idealPart, userAnswerText)
+      : null;
+    return { tipPart, idealPart, diffResult };
+  };
+
   // ✅ formatAIMessage — component level pe, sendAnswer ke bahar
   const formatAIMessage = (text, userAnswerText) => {
     if (!text) return null;
@@ -148,6 +161,13 @@ export default function MockInterview() {
         </div>
       );
     }
+
+    // Precompute the ideal-answer diff once (if this message has a 💡 line)
+    // so the ❌ Missing box can also reference the coverage %.
+    const suggestionLine = lines.find(l => l.startsWith("💡"));
+    const idealInfo = suggestionLine
+      ? extractIdealAnswer(suggestionLine, userAnswerText)
+      : null;
 
     return (
       <div className="divide-y divide-gray-50">
@@ -181,6 +201,13 @@ export default function MockInterview() {
                     <span className="text-xs text-gray-700 leading-relaxed">
                       {line.slice(2).split(":").slice(1).join(":").trim()}
                     </span>
+                    {idealInfo?.diffResult?.score !== null &&
+                      idealInfo?.diffResult?.score !== undefined &&
+                      idealInfo.diffResult.score < 50 && (
+                        <div className="text-[11px] text-red-600 mt-1.5">
+                          You covered only {idealInfo.diffResult.score}% of the ideal answer — check the highlighted terms below.
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -188,17 +215,7 @@ export default function MockInterview() {
           }
           if (line.startsWith("💡")) {
             const label = line.slice(2).split(":")[0].trim();
-            const rest = line.slice(2).split(":").slice(1).join(":").trim();
-
-            // Pull "Ideal Answer: ..." out of the suggestion line, if present
-            const idealMatch = rest.match(/Ideal Answer:\s*(.*)/i);
-            const tipPart = idealMatch ? rest.slice(0, idealMatch.index).trim() : rest;
-            const idealPart = idealMatch ? idealMatch[1].trim() : null;
-
-            // Compute diff once per render for this block
-            const diffResult = idealPart
-              ? renderIdealAnswerDiff(idealPart, userAnswerText)
-              : null;
+            const { tipPart, idealPart, diffResult } = idealInfo || extractIdealAnswer(line, userAnswerText);
 
             return (
               <div key={i} className="px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400">
@@ -208,9 +225,11 @@ export default function MockInterview() {
                     <span className="text-xs font-bold text-yellow-700">
                       {label}:{" "}
                     </span>
-                    <span className="text-xs text-gray-700 leading-relaxed">
-                      {tipPart}
-                    </span>
+                    {tipPart && (
+                      <span className="text-xs text-gray-700 leading-relaxed">
+                        {tipPart}
+                      </span>
+                    )}
 
                     {idealPart && (
                       <div className="mt-2 pt-2 border-t border-yellow-200">
