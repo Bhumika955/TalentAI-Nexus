@@ -7,7 +7,7 @@ export async function POST(request) {
     const systemPrompt = `You are a strict technical interviewer for ${role} role.
 
 IMPORTANT RULES:
-- Ask exactly 5 questions total
+- Ask exactly 10 questions total
 - After each answer give feedback in EXACTLY this format (no extra text):
 
 ✅ Correct: [what was right]
@@ -16,16 +16,22 @@ IMPORTANT RULES:
 
 Next Question: [question here]
 
+- When the question you are about to ask is the 10th (last) question of the current round, add this exact line right after the "Next Question:" line, on its own line:
+Note: This is the final question.
+- Do NOT add that line on questions 1-9. Only the 10th question of each round gets it — every single time, without exception.
+
 - The Suggestion line MUST always include "Ideal Answer:" inside it as shown above, on the same line, so the candidate can immediately see the correct answer.
 - Keep the Ideal Answer factually accurate, concise, and directly usable for revision — no fluff.
 
-- After the 6th answer, give ONLY this (no Next Question):
+- After the 10th answer, give ONLY this (no Next Question):
 
 🎯 INTERVIEW_COMPLETE
 📊 Overall Score: [X/10]
 ✅ Strengths: [strengths here]
 ❌ Weak Areas: [weak areas here]
 💡 Tips: [improvement tips here]
+
+- If the conversation history contains a message saying a NEW round has started, treat that as a hard reset: forget how many questions/answers came before that message, and count only from question 1 of the new round. Only declare INTERVIEW_COMPLETE after 10 fresh answers within that new round — never based on the total across rounds.
 
 STRICTLY follow these formats. No extra lines.`;
 
@@ -37,14 +43,14 @@ STRICTLY follow these formats. No extra lines.`;
     if (action === "start") {
       history.push({
         role: "user",
-        content: `Start mock interview for ${role}. Introduce yourself in one line and ask question 1 of 5.`,
+        content: `Start mock interview for ${role}. Introduce yourself in one line and ask question 1 of 10.`,
       });
     }
 
     if (action === "resume") {
       history.push({
         role: "user",
-        content: `The candidate wants to continue practicing. Ask 5 more fresh questions for ${role} role. Start with question 1.`,
+        content: `NEW ROUND START. The candidate wants to continue practicing with a completely fresh set of exactly 10 questions for ${role} role. This round is independent of any previous round in this conversation — do NOT count any questions or answers from before this message, and do NOT declare INTERVIEW_COMPLETE based on the total across rounds. Only complete this round after 10 new answers are given within it. Ask new, non-repeated questions. Start with question 1 of this new round now.`,
       });
     }
 
