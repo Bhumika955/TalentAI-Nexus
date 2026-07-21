@@ -76,6 +76,7 @@ export default function MockInterview() {
   const [showFinalQuestionPopup, setShowFinalQuestionPopup] = useState(false);
   const continuedRef = useRef(false);
   const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
   const { user } = useAuth();
   const router = useRouter();
   useEffect(() => {
@@ -174,6 +175,10 @@ export default function MockInterview() {
       ? extractIdealAnswer(suggestionLine, userAnswerText)
       : null;
 
+    // Guards against the AI occasionally duplicating a "Next Question:" line
+    // within the same message — only the first one is rendered.
+    let nextQuestionShown = false;
+
     return (
       <div className="divide-y divide-gray-50">
         {lines.map((line, i) => {
@@ -244,13 +249,12 @@ export default function MockInterview() {
                           </div>
                           {diffResult.score !== null && (
                             <span
-                              className={`${
-                                diffResult.score >= 80
+                              className={`${diffResult.score >= 80
                                   ? "bg-emerald-500"
                                   : diffResult.score >= 50
-                                  ? "bg-amber-500"
-                                  : "bg-red-500"
-                              } text-white text-[10px] font-semibold rounded-full px-2 py-0.5`}
+                                    ? "bg-amber-500"
+                                    : "bg-red-500"
+                                } text-white text-[10px] font-semibold rounded-full px-2 py-0.5`}
                             >
                               {diffResult.score}% covered
                             </span>
@@ -273,6 +277,9 @@ export default function MockInterview() {
             );
           }
           if (line.startsWith("Next Question:")) {
+            // Only render the FIRST "Next Question:" line in this message.
+            if (nextQuestionShown) return null;
+            nextQuestionShown = true;
             return (
               <div key={i} className="px-4 py-4 bg-gray-50 border-t-2 border-gray-200">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
@@ -299,7 +306,7 @@ export default function MockInterview() {
     );
   };
 
-const parseFinalResult = (text) => {
+  const parseFinalResult = (text) => {
     if (!text) return {};
     const lines = text.split("\n").filter(l => l.trim());
     const result = {};
@@ -347,6 +354,7 @@ const parseFinalResult = (text) => {
     const updated = [...messages, userMsg];
     setMessages(updated);
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setLoading(true);
 
     try {
@@ -360,7 +368,7 @@ const parseFinalResult = (text) => {
       setMessages(finalMessages);
 
       if (
-        data.reply && 
+        data.reply &&
         (data.reply.includes("INTERVIEW_COMPLETE") || data.reply.includes("Overall Score:"))
       ) {
         setFinalResult(data.reply);
@@ -491,7 +499,7 @@ const parseFinalResult = (text) => {
           return (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "user" ? (
-                <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-purple-600 text-white">
+                <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-purple-600 text-white whitespace-pre-wrap break-words">
                   {msg.text}
                 </div>
               ) : (
@@ -520,19 +528,30 @@ const parseFinalResult = (text) => {
       {/* Input */}
       {!ended && (
         <div className="bg-white border-t border-gray-100 px-6 py-4">
-          <div className="max-w-2xl mx-auto flex gap-3">
-            <input
-              type="text"
+          <div className="max-w-2xl mx-auto flex items-end gap-3">
+            <textarea
+              ref={textareaRef}
+              rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !loading && sendAnswer()}
-              placeholder="Type your answer..."
-              className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 transition-all"
+              onChange={(e) => {
+                setInput(e.target.value);
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = Math.min(el.scrollHeight, 160) + "px";
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!loading) sendAnswer();
+                }
+              }}
+              placeholder="Type your answer"
+              className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm leading-relaxed focus:outline-none focus:border-purple-400 transition-all resize-none overflow-hidden max-h-40"
             />
             <button
               onClick={sendAnswer}
               disabled={loading || !input.trim()}
-              className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all disabled:opacity-40"
+              className="h-12 px-6 shrink-0 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all disabled:opacity-40 flex items-center justify-center"
             >
               Send
             </button>
@@ -633,7 +652,7 @@ const parseFinalResult = (text) => {
                   setShowPopup(false);
                   setEnded(true);
                   setTimeout(() => {
-                     window.location.href = "/interview";
+                    window.location.href = "/interview";
                   }, 3000);
                 }}
                 className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all"
